@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* :root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+} */
+
+.gradient-bg {
+    background-color: #0f0e13; /* Dark gray */
+    background-image: 
+      radial-gradient(at 0% 0%, #1e1e1e 0%, transparent 50%), 
+      radial-gradient(at 50% 0%, #fcd303 0%, transparent 50%), 
+      radial-gradient(at 100% 0%, #ffffff 0%, transparent 50%);
+    min-height: 100vh; /* Ensures the gradient covers the entire viewport */
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+
+.gradient-bg-light {
+    background-color: #ffffff; /* Base white */
+    background-image: 
+      radial-gradient(at 0% 0%, #f9f9f9 0%, transparent 50%), /* Light gray top-left */
+      radial-gradient(at 50% 30%, #fff4c2 0%, transparent 50%), /* Soft yellow in the center */
+      radial-gradient(at 100% 100%, #fefefe 0%, transparent 50%), /* Almost white bottom-right */
+      radial-gradient(at 50% 100%, #fcd30333 0%, transparent 50%); /* Faint yellow highlight at bottom-center */
+    min-height: 100vh; /* Ensures the gradient covers the entire viewport */
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+
+
+/* Custom button style */
+.button-style {
+    background-color: #fcd303; /* bg-gray-200 */
+    color: white; /* text-gray-800 */
+    font-weight: bold;
+    font-size: 16px; /* text-base */
+    padding: 0.5rem 2.5rem; /* py-2 px-6 */
+    border-radius: 30px; /* rounded-full */
+    letter-spacing: 0.05em; /* Adjust letter spacing */
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+  }
+  
+  /* Add hover effect */
+  .button-style:hover {
+    background-color: #e3c200; /* A darker shade of yellow for hover effect */
+    color: #333; /* Text color change on hover */
+  }
