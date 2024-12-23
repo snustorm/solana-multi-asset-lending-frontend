@@ -21,130 +21,72 @@ const Pools = () => {
     const {
         connection,
         wallet,
+        updatedPoolData,
         deposit,
         init_user_token_account,
     } = useAppContext();
 
-    const poolData: Pool[] = [
-        {
-            name: "Solana",
-            ticker: "SOL",
-            icon: "sol.png",
-            totalSupply: "2.1m",
-            totalBorrow: "1.1m",
-            supplyApy: "4.5%",
-            borrowApy: "8.0%",
-            utilization: "50%",
-          },
-          {
-            name: "Tether",
-            ticker: "USDT",
-            icon: "usdt.png",
-            totalSupply: "$1.5m",
-            totalBorrow: "740k",
-            supplyApy: "4.0%",
-            borrowApy: "7.5%",
-            utilization: "50%",
-          },
-          {
-            name: "USD Coin",
-            ticker: "USDC",
-            icon: "usdc.png",
-            totalSupply: "2.5m",
-            totalBorrow: "1.2m",
-            supplyApy: "5.0%",
-            borrowApy: "9.0%",
-            utilization: "48%",
-          },
-          {
-            name: "Solayer SOL",
-            ticker: "sSOL",
-            icon: "sSol.png",
-            totalSupply: "2.5m",
-            totalBorrow: "1.2m",
-            supplyApy: "5.0%",
-            borrowApy: "9.0%",
-            utilization: "48%",
-          },
-          {
-            name: "Raydium",
-            ticker: "RAY",
-            icon: "ray.png",
-            totalSupply: "2.5m",
-            totalBorrow: "1.2m",
-            supplyApy: "5.0%",
-            borrowApy: "9.0%",
-            utilization: "48%",
-          },
-          {
-            name: "Jupiter",
-            ticker: "JUP",
-            icon: "jup.png",
-            totalSupply: "2.5m",
-            totalBorrow: "1.2m",
-            supplyApy: "5.0%",
-            borrowApy: "9.0%",
-            utilization: "48%",
-          },
-    ];
+    // Match updatedPoolData with tokens and add missing fields (like APY and icons)
+  const poolData = [
+    { name: "Solana", ticker: "SOL", icon: "sol.png", supplyApy: "4.5%", borrowApy: "8.0%" },
+    { name: "Tether", ticker: "USDT", icon: "usdt.png", supplyApy: "5.0%", borrowApy: "7.5%" },
+    { name: "USD Coin", ticker: "USDC", icon: "usdc.png", supplyApy: "5.0%", borrowApy: "7.5%" },
+  ];
+
+  // Merge updatedPoolData with static poolData
+  const mergedPoolData = poolData.map((pool, index) => {
+        const dynamicData = updatedPoolData[index]; // Use index or find by ticker
+        return {
+        ...pool,
+        totalSupply: dynamicData?.totalSupply || "N/A",
+        totalBorrow: dynamicData?.totalBorrow || "N/A",
+        utilization: dynamicData?.utilization || "N/A",
+        };
+    });
 
   const [isModalOpen, setIsModalOpen] = useState(false); // Modal visibility state
   const [selectedPool, setSelectedPool] = useState<Pool | null>(null); // Selected pool data
   const [depositAmount, setDepositAmount] = useState(""); // User-entered deposit amount
+  const [depositAsset, setDepositAsset] = useState(""); // User-selected deposit asset
   const [error, setError] = useState("");
   const [txHash, setTxHash] = useState('');
 
 
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-  const [isDepositSuccessful, setIsDepositSuccessful] = useState(false);
 
-// Function to trigger success modal on successful deposit
-    const showSuccessModal = () => {
-        setIsDepositSuccessful(true);
-        setIsSuccessModalOpen(true);
-    };
 
     const closeSuccessModal = () => {
         setIsSuccessModalOpen(false);
-        setIsDepositSuccessful(false); 
     };
 
-
-  // Open modal and set selected pool
   const openModal = (pool: Pool) => {
     setSelectedPool(pool);
     setIsModalOpen(true);
   };
 
-  // Close modal and clear input
+
   const closeModal = () => {
     setIsModalOpen(false);
-    setDepositAmount("");
     setSelectedPool(null);
   };
 
-  // Handle deposit amount change
-  const handleDepositAmountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setDepositAmount(event.target.value);
-  };
-
-  // Submit deposit logic (to be implemented)
+  
   const handleDeposit = async () => {
-   
+    
     if (!depositAmount || isNaN(Number(depositAmount)) || Number(depositAmount) <= 0 || !wallet) {
       setError("Please enter a valid amount.");
       return;
     }
   
-    // Get the pool's token name (e.g., SOL in "SOL/USDC")
     const poolTokenName = selectedPool?.ticker;
-  
+    
     if (!poolTokenName) {
       setError("Invalid pool selected.");
       return;
     }
+
+    setDepositAsset(poolTokenName);
   
-    // Ensure mint is a valid PublicKey
     const mint = mintData[poolTokenName];
     if (!mint) {
       setError("Invalid pool selected.");
@@ -152,28 +94,21 @@ const Pools = () => {
     }
   
     try {
-      const mintPublicKey = new PublicKey(mint); // Convert to PublicKey if it's a string
+      const mintPublicKey = new PublicKey(mint);
   
-      // Check if the user token account already exists
       const userTokenAccount = getUserTokenAccountAddress(wallet.publicKey, mintPublicKey);
-  
       const accountInfo = await connection.getAccountInfo(userTokenAccount);
   
-      // If the account doesn't exist, initialize it
       if (!accountInfo) {
         console.log("User token account not found. Initializing...");
         await init_user_token_account(poolTokenName, mintPublicKey);
       }
   
-      console.log(`Depositing ${depositAmount} to ${selectedPool?.name} with mint ${mintPublicKey.toBase58()}`);
-      
-      await deposit(
-            poolTokenName, 
-            Number(depositAmount) * 1_000, 
-            mintPublicKey
-        );
+      const txHash = await deposit(poolTokenName, Number(depositAmount) * 1_000, mintPublicKey);
   
-      closeModal(); // Close the modal after deposit
+      console.log(`Deposit successful! Transaction Hash: ${txHash}`);
+      setTxHash(txHash); // Set transaction hash state
+      closeModal(); // Close deposit modal
       setIsSuccessModalOpen(true); // Show success modal
     } catch (err) {
       console.error("Error during deposit:", err);
@@ -201,7 +136,7 @@ const Pools = () => {
           </tr>
         </thead>
         <tbody>
-          {poolData.map((pool, index) => (
+          {mergedPoolData.map((pool, index) => (
             <tr key={index} className="border-t border-gray-200 text-right">
               <td className="py-4 flex items-center gap-2">
                 <div className="relative w-10 h-10">
@@ -294,7 +229,7 @@ const Pools = () => {
         />
         
         <p className="text-center text-md font-semibold text-gray-700">
-            You have successfully deposited 1 USDC.
+            You have successfully deposited {depositAmount} {depositAsset}.
             <a 
             href={`https://explorer.solana.com/tx/${txHash}?cluster=devnet`} 
             target="_blank" 

@@ -18,3 +18,15 @@ export const confirmTx = async (txHash: String | undefined, connection: any) => 
         signature: txHash,
     })
 }
+
+export const formatCurrency = (value: number) => {
+    const factAmount = value / 1_000_000_000; // Scale down to fact_amount
+    
+    if (factAmount >= 1_000_000) {
+      return `${(factAmount / 1_000_000).toFixed(1)}m`; // Format as millions
+    } else if (factAmount >= 1_000) {
+      return `${(factAmount / 1_000).toFixed(1)}k`; // Format as thousands
+    } else {
+      return factAmount.toFixed(2); // Default format with 2 decimals
+    }
+  };

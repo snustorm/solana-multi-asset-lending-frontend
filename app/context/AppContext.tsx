@@ -7,14 +7,14 @@ import { SystemProgram, PublicKey } from "@solana/web3.js";
 import { BN, } from "@project-serum/anchor";
 import { Wallet } from "@coral-xyz/anchor";
 import { getProgram, getUserAddress, getUserTokenAccountAddress, getBankTokenAccountAddress, getBankAccountAddress } from "../utils/program";
-import { confirmTx } from "../utils/helper";
+import { confirmTx, formatCurrency } from "../utils/helper";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { priceFeedMap, PROGRAM_ID, SOL_MINT, SOL_PRICE_FEED_ID, USDC_MINT, USDC_PRICE_FEED_ID } from "../utils/constants";
+import { priceFeedMap, PROGRAM_ID, SOL_MINT, SOL_PRICE_FEED_ID, USDC_MINT, } from "../utils/constants";
 import { AccountLayout, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import { Connection } from "@solana/web3.js";
-//import { PythSolanaReceiver } from '@pythnetwork/pyth-solana-receiver';
+import { mintData } from "../lend-borrow/utils/mintData";
 
 interface AppContextType {
   connected: boolean;
@@ -24,12 +24,19 @@ interface AppContextType {
   userTotalBorrow: number;
   connection: Connection;
   wallet: AnchorWallet | undefined;
+  updatedPoolData: PoolInfo[];
   initPool: () => Promise<void>;
-  deposit: (name: string, amount: number, mint: PublicKey) => Promise<void>;
+  deposit: (name: string, amount: number, mint: PublicKey) => Promise<string>;
   init_user_token_account: (name: string, mint: PublicKey) => Promise<void>;
   borrow: (amount: number, mint: PublicKey) => Promise<void>;
   withdraw: (amount: number, mint: PublicKey) => Promise<void>;
 }
+
+type PoolInfo = {
+    totalSupply: string; // Dynamic
+    totalBorrow: string; // Dynamic
+    utilization: string;
+  };
 
 // Create the context with a default value of `undefined` for optional types
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -41,14 +48,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [userTotalDeposit, setUserTotalDeposit] = useState(0);
   const [userTotalBorrow, setUserTotalBorrow] = useState(0);
-
-
   const [userAddress, setUserAddress] = useState<PublicKey | null>(null);
-
-  const [usdcBankAccount, setUsdcBankAccount] = useState<PublicKey | null>(null);
-  const [solBankAccount, setSolBankAccount] = useState<PublicKey | null>(null);
-  const [usdcBankTokenAccount, setUsdcBankTokenAccount] = useState<PublicKey | null>(null);
-  const [solBankTokenAccount, setSolBankTokenAccount] = useState<PublicKey | null>(null);    
+  const [updatedPoolData, setUpdatedPoolData] = useState<PoolInfo[]>([]);
 
   // Use useMemo to get the program if connected
   const program = useMemo(() => {
@@ -61,6 +62,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (program && wallet?.publicKey) {
       updateUserAccountState();
+      updateBankData();
     }
   }, [program]);
 
@@ -72,22 +74,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       const userAddress = getUserAddress(wallet.publicKey);
       const userAccount = await program.account.user.fetchNullable(userAddress);
       setUserAddress(userAddress);
-
-     const usdcBankAccount = getBankAccountAddress(USDC_MINT);
-     const solBankAccount = getBankAccountAddress(SOL_MINT);
-     const usdcBankTokenAccount = getBankTokenAccountAddress(USDC_MINT);
-     const solBankTokenAccount = getBankTokenAccountAddress(SOL_MINT);
-
-     console.log('USDC Bank Account', usdcBankAccount.toString());
-     console.log('SOL Bank Account', solBankAccount.toString());
-     console.log('USDC Bank Token Account', usdcBankTokenAccount.toString());
-     console.log('SOL Bank Token Account', solBankTokenAccount.toString());
-     
-     setUsdcBankAccount(usdcBankAccount);
-     setSolBankAccount(solBankAccount);
-     setUsdcBankTokenAccount(usdcBankTokenAccount);
-     setSolBankTokenAccount(solBankTokenAccount);
-
 
       if (userAccount) {
         setUserTotalDeposit(userAccount.totalDepositValue.toNumber() / 1000 );
@@ -104,6 +90,42 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       console.error("Error fetching user account:", err);
     }
   };
+
+  const updateBankData = async () => {
+    if (!program) return;
+
+    console.log("Updating bank data...");
+
+    const PoolData: PoolInfo[] = [];
+
+    for (const [ticker, mintAddress] of Object.entries(mintData)) {
+      try {
+        const mintPublicKey = new PublicKey(mintAddress);
+        const bankAddress = await getBankAccountAddress(mintPublicKey);
+        console.log("Bank Address: ", bankAddress.toBase58());
+        const bankAccount = await program.account.bank.fetch(bankAddress);
+
+        // Map fetched data to Pool fields
+        const totalDeposits = bankAccount.totalDeposits.toNumber();
+        const totalBorrowed = bankAccount.totalBorrowed.toNumber();
+        const utilization = (totalBorrowed / totalDeposits) * 100;
+        console.log("Total Deposits: ", totalDeposits);
+        console.log("Total Borrowed: ", totalBorrowed);
+
+        PoolData.push({
+          totalSupply: formatCurrency(totalDeposits),
+          totalBorrow: formatCurrency(totalBorrowed),
+          utilization: `${utilization.toFixed(2)}%`,
+        });
+      } catch (err) {
+        console.error(`Failed to fetch data for ${ticker}:`, err);
+      }
+    }
+
+    setUpdatedPoolData(PoolData);
+
+  };
+
 
 
   const getPriceFeedAccount = (name: string): string | null => {
@@ -143,36 +165,30 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       await confirmTx(tx, connection);
   }
   
-  const deposit = async (name: string, amount: number, mint: PublicKey) => {
+  const deposit = async (name: string, amount: number, mint: PublicKey): Promise<string> => {
     console.log("Attempting to deposit...");
 
-    // Ensure required parameters and accounts are available
     if (!program || !wallet?.publicKey || !userAddress) {
-        console.error("Missing required parameters or wallet address.");
-        return;
+        throw new Error("Missing required parameters or wallet address.");
     }
 
     // Dynamically retrieve price feed and bank accounts
     const priceFeedAccount = getPriceFeedAccount(name);
     if (!priceFeedAccount) {
-        console.error(`Failed to retrieve price feed account for ${name}.`);
-        return;
+        throw new Error(`Failed to retrieve price feed account for ${name}.`);
     }
 
     const userTokenAccount = getUserTokenAccountAddress(wallet.publicKey, mint);
     const bankAccount = getBankAccountAddress(mint);
     const bankTokenAccount = getBankTokenAccountAddress(mint);
 
-    // Ensure all required accounts are valid
     if (!userTokenAccount || !bankAccount || !bankTokenAccount) {
-        console.error("Missing one or more required accounts.");
-        return;
+        throw new Error("Missing one or more required accounts.");
     }
 
     console.log("Preparing transaction...");
 
     try {
-        // Prepare and send the transaction
         const tx = await program.methods
             .deposit(new BN(amount))
             .accounts({
@@ -193,16 +209,11 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         // Update the user account state
         await updateUserAccountState();
 
-        console.log("Deposit successful!");
-
-        // Optional: Add success notification (toast, alert, etc.)
-        // toast.success("Deposit successful!");
-
+        console.log("Deposit successful! Transaction Hash:", tx);
+        return tx; // Return the transaction hash
     } catch (err) {
-        console.error("Error depositing:", err);
-
-        // Optional: Add error notification (toast, alert, etc.)
-        // toast.error("Failed to deposit.");
+        console.error("Error during deposit:", err);
+        throw new Error("Failed to complete the deposit.");
     }
 };
 
@@ -275,39 +286,16 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
     try {
        const initUSDCBankTx = await program.methods.initBank
-          (new BN(8000), new BN(5000), USDC_PRICE_FEED_ID)
+          (new BN(8000), new BN(5000), priceFeedMap.USDT)
           .accounts({
             signer: wallet.publicKey,
-            mint: USDC_MINT,
+            mint: mintData.USDT,
             tokenProgram: TOKEN_PROGRAM_ID,
           })
           .rpc({ commitment: 'confirmed' });
     
-        console.log('Create USDC Bank Account', initUSDCBankTx);
+        console.log('Success, Create Bank Account', initUSDCBankTx);
 
-        const initSOLBankTx = await program.methods
-          .initBank(new BN(8000), new BN(5000), SOL_PRICE_FEED_ID)
-          .accounts({
-            signer: wallet.publicKey,
-            mint: SOL_MINT,
-            tokenProgram: TOKEN_PROGRAM_ID,
-          })
-          .rpc({ commitment: 'confirmed' });
-    
-        console.log('Create SOL Bank Account', initSOLBankTx);
-
-        // const amount = 10_000;
-        // const mintSOLTx = await mintTo(
-        //   // @ts-ignores
-        //   banksClient,
-        //   signer,
-        //   mintSOL,
-        //   solBankTokenAccount,
-        //   signer,
-        //   amount
-        // );
-
-        // Update state or display confirmation
     } catch (err) {
         console.error("Error initializing pools:", err);
     }
@@ -323,6 +311,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         userTotalBorrow,
         connection,
         wallet,
+        updatedPoolData,
         initPool,
         deposit,
         init_user_token_account,
