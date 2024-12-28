@@ -27,7 +27,7 @@ export const getProgram = (connection: Connection, wallet: AnchorWallet | null) 
         commitment: "confirmed",
       }
     );
-  
+    // @ts-expect-error: Lending2 type is missing properties required by Idl, but it is functional in this context.
     const program = new Program<Lending2>(IDL as Idl, provider);
   
     return program;
@@ -85,19 +85,21 @@ export const getAllAssetPrices = async (): Promise<Record<string, number>> => {
       const assetPrices: Record<string, number> = {};
   
       // Iterate through the price feed map to fetch and convert prices
-      Object.entries(priceFeedMap).forEach(([asset, feedId], index) => {
+      Object.entries(priceFeedMap).forEach(([assetName, feedId], index) => {
+        
+        console.log(feedId);
         if (currentPrices && currentPrices[index]) {
           const feed = currentPrices[index];
           const priceStruct = feed.getPriceNoOlderThan(200); // Fetch recent price
           if (priceStruct && priceStruct.price && priceStruct.expo !== undefined) {
             // Convert price to real value
             const realPrice = parseFloat(priceStruct.price) * Math.pow(10, priceStruct.expo);
-            assetPrices[asset] = realPrice; // Store the converted price
+            assetPrices[assetName] = realPrice; // Use the asset name as the key
           } else {
-            console.warn(`Incomplete price data for asset: ${asset}`);
+            console.warn(`Incomplete price data for asset: ${assetName}`);
           }
         } else {
-          console.warn(`Price feed not available for asset: ${asset}`);
+          console.warn(`Price feed not available for asset: ${assetName}`);
         }
       });
   
