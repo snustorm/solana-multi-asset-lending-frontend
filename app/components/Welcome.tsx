@@ -1,6 +1,3 @@
-import { AiFillPlayCircle } from "react-icons/ai";
-import { FaEthereum } from "react-icons/fa";  
-import { BsInfoCircle } from "react-icons/bs";
 import React from "react";
 
 const companyCommonStyles = `
@@ -11,7 +8,6 @@ const companyCommonStyles = `
 `;
 
 const Welcome = () => {
-  
   
     return (
     <div className="flex w-full justify-center items-center  px-56">

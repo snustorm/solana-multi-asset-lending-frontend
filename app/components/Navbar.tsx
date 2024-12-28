@@ -8,7 +8,9 @@ import { AiOutlineClose } from "react-icons/ai";
 import Image from "next/image";
 
 const NavBarItem = ({ title, href, classProps }: { title: string; href: string; classProps?: string }) => (
-  <li className={`mx-4 cursor-pointer ${classProps}`}>
+    <li
+    className={`mx-4 cursor-pointer transition duration-100 hover:text-yellow-400 ${classProps}`}
+  >
     <Link href={href}>{title}</Link>
   </li>
 );
@@ -29,7 +31,7 @@ export default function Navbar( { isLightMode } : { isLightMode: boolean }) {
           {[
             { title: "Home", href: "/" },
             { title: "Lend/Borrow", href: "/lend-borrow" },
-            { title: "Swap", href: "/swap" },
+            { title: "Liquidate", href: "/liquidate" },
             { title: "Token", href: "/token" },
           ].map((item, index) => (
             <NavBarItem key={index} title={item.title} href={item.href} />
@@ -46,7 +48,6 @@ export default function Navbar( { isLightMode } : { isLightMode: boolean }) {
                 color: "white", // text-gray-800
                 fontWeight: "bold",
                 fontSize: "16px", // text-base
-                padding: "0.5rem 2.5rem", // py-2 px-6
                 borderRadius: "30px", // rounded-full
                 letterSpacing: "0.05em", // Adjust letter spacing
                 transition: "background-color 0.3s ease-in-out, color 0.3s ease-in-out",

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Connection, Keypair, PublicKey, SystemProgram, Transaction, clusterApiUrl } from "@solana/web3.js";
-import { ASSOCIATED_TOKEN_PROGRAM_ID, createAssociatedTokenAccount, createAssociatedTokenAccountInstruction, createInitializeMintInstruction, createMint, createMintToInstruction, getAssociatedTokenAddress, getMinimumBalanceForRentExemptMint, getMint, getOrCreateAssociatedTokenAccount, MINT_SIZE, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, createAssociatedTokenAccountInstruction, createInitializeMintInstruction, createMintToInstruction, getAssociatedTokenAddress, getMinimumBalanceForRentExemptMint, MINT_SIZE, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { useWallet } from "@solana/wallet-adapter-react";
 import BN from "bn.js";
 
@@ -21,16 +21,10 @@ export default function Mint() {
 
   // State for quick minting
   const [quickMintTokenMint, setQuickMintTokenMint] = useState('');
-  const [quickMintTokenMint2, setQuickMintTokenMint2] = useState('');
   const [recipientAddress, setRecipientAddress] = useState('');
-  const [recipientAddressATA, setRecipientAddressATA] = useState('');
   const [quickMintAmount, setQuickMintAmount] = useState('');
-  const [quickMintAmount2, setQuickMintAmount2] = useState('');
   const [quickMintMessage, setQuickMintMessage] = useState(''); 
-  const [quickMintMessage2, setQuickMintMessage2] = useState(''); 
   const [quickMintLoading, setQuickMintLoading] = useState(false);
-  const [quickMintLoading2, setQuickMintLoading2] = useState(false);
-
 
   const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
@@ -67,7 +61,7 @@ export default function Mint() {
 
         sendTransaction(transaction, connection, {
             signers: [mint],
-          }).then((sig) => {
+          }).then(() => {
             setMintAddress(mint.publicKey.toString());
           });
           setError(null);

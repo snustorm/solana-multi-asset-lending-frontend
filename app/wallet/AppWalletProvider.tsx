@@ -11,9 +11,7 @@ import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { clusterApiUrl } from "@solana/web3.js";
 import { PhantomWalletAdapter, SafePalWalletAdapter, SolflareWalletAdapter } from "@solana/wallet-adapter-wallets";
- 
-// Default styles that can be overridden by your app (很重要，没有就会报错)
-require("@solana/wallet-adapter-react-ui/styles.css");
+import "@solana/wallet-adapter-react-ui/styles.css";
 
 
 export const WalletButton = dynamic(
@@ -44,7 +42,7 @@ export default function AppWalletProvider({
    
     return (
       <ConnectionProvider endpoint={endpoint}>
-        <WalletProvider wallets={[]} onError={onError}  autoConnect={false}>
+        <WalletProvider wallets={wallets} onError={onError}  autoConnect={false}>
           <WalletModalProvider>{children}</WalletModalProvider>
         </WalletProvider>
       </ConnectionProvider>

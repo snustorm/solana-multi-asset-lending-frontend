@@ -4,15 +4,12 @@
 import UserInformation from "./Info";
 import UserAssets from "./Assets";
 import Pools from "./Pools";
-import { useAppContext } from "../context/AppContext";
-
-
 
 const LendingBorrowingPage = () => {
 
-    const {
-        initPool,
-    } = useAppContext();
+    // const {
+    //     initPool,
+    // } = useAppContext();
 
 
     return (
@@ -26,12 +23,12 @@ const LendingBorrowingPage = () => {
         {/* Third Section - Available Pools */}
         <Pools />
 
-        <button
+        {/* <button
             className="button-style m-40"
              onClick={initPool}
             >
              Create Pool   
-        </button>
+        </button> */}
       </div>
     );
   };
