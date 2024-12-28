@@ -30,3 +30,5 @@ export const formatCurrency = (value: number) => {
       return factAmount.toFixed(2); // Default format with 2 decimals
     }
   };
+
+  

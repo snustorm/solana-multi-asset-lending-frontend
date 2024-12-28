@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/lending2.json`.
  */
 export type Lending2 = {
-    "address": "FYFjEBY8QnmqR1H9QMEJHDUap4VKfBWW8C3XYr8R8JNs",
+    "address": "AjnXUaDfPD88JyARjMkYaCDnpbWuGiRZvHdvKfQbGZnt",
     "metadata": {
       "name": "lending2",
       "version": "0.1.0",
@@ -30,9 +30,6 @@ export type Lending2 = {
             "name": "signer",
             "writable": true,
             "signer": true
-          },
-          {
-            "name": "mintLend"
           },
           {
             "name": "mintBorrow"
@@ -91,37 +88,6 @@ export type Lending2 = {
                 {
                   "kind": "account",
                   "path": "mintBorrow"
-                }
-              ]
-            }
-          },
-          {
-            "name": "userTokenAccountLend",
-            "writable": true,
-            "pda": {
-              "seeds": [
-                {
-                  "kind": "const",
-                  "value": [
-                    117,
-                    115,
-                    101,
-                    114,
-                    45,
-                    116,
-                    111,
-                    107,
-                    101,
-                    110
-                  ]
-                },
-                {
-                  "kind": "account",
-                  "path": "signer"
-                },
-                {
-                  "kind": "account",
-                  "path": "mintLend"
                 }
               ]
             }
@@ -575,6 +541,195 @@ export type Lending2 = {
         ]
       },
       {
+        "name": "repay",
+        "discriminator": [
+          234,
+          103,
+          67,
+          82,
+          208,
+          234,
+          219,
+          166
+        ],
+        "accounts": [
+          {
+            "name": "signer",
+            "writable": true,
+            "signer": true
+          },
+          {
+            "name": "mint"
+          },
+          {
+            "name": "bank",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "account",
+                  "path": "mint"
+                }
+              ]
+            }
+          },
+          {
+            "name": "bankTokenAccount",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "const",
+                  "value": [
+                    116,
+                    114,
+                    101,
+                    97,
+                    115,
+                    117,
+                    114,
+                    121
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "mint"
+                }
+              ]
+            }
+          },
+          {
+            "name": "userAccount",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "const",
+                  "value": [
+                    117,
+                    115,
+                    101,
+                    114
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "signer"
+                }
+              ]
+            }
+          },
+          {
+            "name": "userTokenAccount",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "const",
+                  "value": [
+                    117,
+                    115,
+                    101,
+                    114,
+                    45,
+                    116,
+                    111,
+                    107,
+                    101,
+                    110
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "signer"
+                },
+                {
+                  "kind": "account",
+                  "path": "mint"
+                }
+              ]
+            }
+          },
+          {
+            "name": "userAssociatedTokenAccount",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "account",
+                  "path": "signer"
+                },
+                {
+                  "kind": "account",
+                  "path": "tokenProgram"
+                },
+                {
+                  "kind": "account",
+                  "path": "mint"
+                }
+              ],
+              "program": {
+                "kind": "const",
+                "value": [
+                  140,
+                  151,
+                  37,
+                  143,
+                  78,
+                  36,
+                  137,
+                  241,
+                  187,
+                  61,
+                  16,
+                  41,
+                  20,
+                  142,
+                  13,
+                  131,
+                  11,
+                  90,
+                  19,
+                  153,
+                  218,
+                  255,
+                  16,
+                  132,
+                  4,
+                  142,
+                  123,
+                  216,
+                  219,
+                  233,
+                  248,
+                  89
+                ]
+              }
+            }
+          },
+          {
+            "name": "priceUpdate"
+          },
+          {
+            "name": "tokenProgram"
+          },
+          {
+            "name": "associatedTokenProgram",
+            "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+          },
+          {
+            "name": "systemProgram",
+            "address": "11111111111111111111111111111111"
+          }
+        ],
+        "args": [
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      },
+      {
         "name": "withdraw",
         "discriminator": [
           183,
@@ -858,6 +1013,11 @@ export type Lending2 = {
         "code": 6007,
         "name": "insufficientCollateral",
         "msg": "Insufficient Collateral"
+      },
+      {
+        "code": 6008,
+        "name": "invalidDecimals",
+        "msg": "Invalid Decimals"
       }
     ],
     "types": [
@@ -1135,7 +1295,7 @@ export type Lending2 = {
       {
         "name": "amountScale",
         "type": "u64",
-        "value": "1000000"
+        "value": "1000000000"
       },
       {
         "name": "interestRateScale",
@@ -1156,11 +1316,6 @@ export type Lending2 = {
         "name": "maxLtvRateScale",
         "type": "u64",
         "value": "10000"
-      },
-      {
-        "name": "tokenPriceDecimals",
-        "type": "u64",
-        "value": "100000000"
       }
     ]
   };
