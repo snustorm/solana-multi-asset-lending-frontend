@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAppContext } from "../context/AppContext";
 import { PublicKey } from "@solana/web3.js";
-import { mintData } from "./utils/mintData";
+import { mintData } from "../utils/constants";
 import { getUserTokenAccountAddress } from "../utils/program";
 import { toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useAppContext } from "../context/AppContext";
-import { mintData } from "./utils/mintData";
+import { mintData } from "../utils/constants";
 import { PublicKey } from "@solana/web3.js";
 import Lottie from 'react-lottie';
 import withdrawAni from "../../public/animation/withdraw.json";

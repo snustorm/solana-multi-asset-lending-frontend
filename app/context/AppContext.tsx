@@ -15,7 +15,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import { Connection } from "@solana/web3.js";
-import { mintData } from "../lend-borrow/utils/mintData";
+import { mintData } from "../utils/constants";
 import { Lending2 } from "../utils/lending2";
 
 interface AppContextType {
