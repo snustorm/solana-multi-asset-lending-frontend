@@ -1,34 +1,24 @@
+'use client';
+import dynamic from "next/dynamic";
 
-import UserInformation from "./Info";
-import UserAssets from "./Assets";
-import Pools from "./Pools";
+// Dynamically import components with SSR disabled
+const UserInformation = dynamic(() => import("./Info"), { ssr: false });
+const UserAssets = dynamic(() => import("./Assets"), { ssr: false });
+const Pools = dynamic(() => import("./Pools"), { ssr: false });
 
 const LendingBorrowingPage = () => {
-
-    // const {
-    //     initPool,
-    // } = useAppContext();
-
-
     return (
-      <div className="min-h-screen px-56 py-4 text-gray-900 mt-5 mb-20">
-        {/* First Section - User Information */}
-        <UserInformation />
+        <div className="min-h-screen px-56 py-4 text-gray-900 mt-5 mb-20">
+            {/* First Section - User Information */}
+            <UserInformation />
 
-        {/* Second Section - User Assets */}
-        <UserAssets />
+            {/* Second Section - User Assets */}
+            <UserAssets />
 
-        {/* Third Section - Available Pools */}
-        <Pools />
-
-        {/* <button
-            className="button-style m-40"
-             onClick={initPool}
-            >
-             Create Pool   
-        </button> */}
-      </div>
+            {/* Third Section - Available Pools */}
+            <Pools />
+        </div>
     );
-  };
-  
-  export default LendingBorrowingPage;
+};
+
+export default LendingBorrowingPage;
