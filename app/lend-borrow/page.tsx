@@ -1,4 +1,4 @@
-'use client'
+
 import UserInformation from "./Info";
 import UserAssets from "./Assets";
 import Pools from "./Pools";
