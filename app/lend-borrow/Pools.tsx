@@ -1,3 +1,5 @@
+'use client'
+
 import { useState } from "react";
 import { useAppContext } from "../context/AppContext";
 import { PublicKey } from "@solana/web3.js";

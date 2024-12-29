@@ -96,10 +96,10 @@ export const getAllAssetPrices = async (): Promise<Record<string, number>> => {
             const realPrice = parseFloat(priceStruct.price) * Math.pow(10, priceStruct.expo);
             assetPrices[assetName] = realPrice; // Use the asset name as the key
           } else {
-            console.warn(`Incomplete price data for asset: ${assetName}`);
+                                                                               console.warn(`Incomplete price data for asset: ${assetName}`);
           }
         } else {
-          console.warn(`Price feed not available for asset: ${assetName}`);
+          console.warn(`Price feed n                                ot available for asset: ${assetName}`);
         }
       });
   
